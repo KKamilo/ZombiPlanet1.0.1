@@ -1,24 +1,35 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using NPC.Ally;
+using UnityEngine.UI;
 
 namespace NPC // NameSpace que guarga toda la estructura del enemigo
 {
     namespace Enemy // NameSpace que guarga la class Zombi para ser usada en el Generador
     {
-        public class Zombi : MonoBehaviour
+        public class Zombi : ReguladorNPC
         {//declaracion de variables
+            
             public DatoZombis datos; //Variable estruc para guardar los datos
-            public int rotarcion;
-            public float veloci = 2f;
-            public string gusto;
-            public int direccion;
+            public static string gusto;
+            Vector3 directionCyti;
+            Vector3 directionHero;
+            float tempCyti;
+            public static float DistanciaHero;
+            float vision = 5f;
+            public static string texto;
             void Start()
             {
+                datos.edad = Random.Range(15, 101);
                 rotarcion = Random.Range(35, 95);
-                gusto = ZombiHable();
+                datos.gustos = Random.Range(0, 5);
                 gameObject.transform.tag = "Zombi";
-
+                positionInicial = transform.position;
+                if (datos.edad > 15)
+                    veloci = (float) (15*3)/datos.edad;
+                player = GameObject.FindGameObjectWithTag("Herue");
+              
                 int color = Random.Range(1, 4);
                 switch (color)
                 {
@@ -32,65 +43,67 @@ namespace NPC // NameSpace que guarga toda la estructura del enemigo
                         this.GetComponent<Renderer>().material.color = Color.magenta;
                         break;
                 }
-                StartCoroutine(rutina());
+                texto = ZombiHable();
+                
+                StartCoroutine(rutinaZombiCyti());
+                
             }
-            // Corutina para indicar el mobimiento del Zombi que es estar quieto o caminar
-            IEnumerator rutina()
-            {
-                while (true)
-                {
-                    int accion = Random.Range(0, 3);
-                    switch (accion)
-                    {
-                        case 0:
-                            datos.mover = Accion.Idle;
-                            break;
-                        case 1:
-                            datos.mover = Accion.Moving;
-                            direccion = Random.Range(0, 4);
-                            break;
-                        case 2:
-                            
-                            datos.mover = Accion.Rotating;
-                            break;
-                    }
-                    yield return new WaitForSeconds(3f);
-                }
-            }
+            
             // Mensaje que retornara a la clase Hero para ser impreso con el gusto del Zombi
             public string ZombiHable()
             {
-                datos.gustos = Random.Range(0, 5);
                 datos.gusto = (Gustos)datos.gustos;
                 return "Waaaarrrr quieroooo comeeer " + datos.gusto;
             }
+
             public void Update()
             {
-                if (datos.mover == Accion.Moving)
+                if (Juego.vivo == true) // Variable de vida del herue para ser ejetutada al empesar
                 {
-                    switch (direccion)
-                    {
-                        case 0:
-                            transform.position += transform.forward * veloci * Time.deltaTime;
-                            break;
-                        case 1:
-                            transform.position -= transform.forward * veloci * Time.deltaTime;
-                            break;
-                        case 2:
-                            transform.position += transform.right * veloci * Time.deltaTime;
-                            break;
-                        case 3:
-                            transform.position -= transform.right * veloci * Time.deltaTime;
-                            break;
-                    }
+                    DistanciaHero = Vector3.Distance(player.transform.position, transform.position); // Distancia del Zombi al Herue
+                    GameObject aldeanoCerca = null;// GameObject que almacena a todos los Aldeanos en la esena
 
-                }
-                else if (datos.mover== Accion.Rotating)
-                {
-                    
-                    transform.Rotate(transform.up  * rotarcion * Time.deltaTime);
+                    foreach (Ciudadano aldeano in Transform.FindObjectsOfType<Ciudadano>())
+                    {
+                        tempCyti = Vector3.Distance(aldeano.transform.position, transform.position);// Distancia del Zombi al Aldeano mas sercano
+
+                        if (tempCyti < vision)
+                        {
+                            vision = tempCyti;
+                            aldeanoCerca = aldeano.gameObject; //remplasa el null por el Aldeano mas sercano
+
+                        }
+
+                    }
+                    // If que hace que el Zombi tenga como prioridad al Aldeano y no al herue
+                    if (aldeanoCerca != null)
+                    {
+                        directionCyti = Vector3.Normalize(aldeanoCerca.transform.position - transform.position);
+                        transform.position += directionCyti * 0.1f;
+                    }
+                    else if (DistanciaHero <= vision)
+                    {
+                        gusto = ZombiHable();
+                        directionHero = Vector3.Normalize(player.transform.position - transform.position);
+                        transform.position += directionHero * 0.1f;
+                    }
+                    else
+                    {
+                        vision = 5f;
+                        ComportarceNormal();
+                    }
                 }
             }
+            // Finalisasion del juego al momento de colicionar con el herue 
+            private void OnCollisionEnter(Collision collision)
+            {
+                if (collision.transform.tag == "Herue")
+                {
+                    Juego.perder.SetActive(true);
+                    Juego.vivo = false;
+                }
+            }
+
         }
         //Estrus que almacena los datos del Zombi
         public struct DatoZombis
@@ -98,8 +111,11 @@ namespace NPC // NameSpace que guarga toda la estructura del enemigo
             public Gustos gusto;
             public Accion mover;
             public int gustos;
+            public int edad;
+            // Gusto que pueden tener los Zombis
+            
         }
-        // Gusto que pueden tener los Zombis
+        
         public enum Gustos
         {
             Pierna,
@@ -107,9 +123,11 @@ namespace NPC // NameSpace que guarga toda la estructura del enemigo
             Corazon,
             Braso,
             Manos,
-            Last
         }
-        //Indicadior que ace mover al Zombi los cuales son: Idle => Quieto y Moving => Mover
-        public enum Accion { Idle, Moving, Rotating }
+        
     }
 }
+
+
+// enum Global que es utilizado por los Zombis y Aldeanos
+public enum Accion { Running, Idle, Moving, Rotating, Pursuing }

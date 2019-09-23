@@ -11,23 +11,26 @@ public class Ojos : MonoBehaviour
     public bool invertedMouse;
     void Update()
     {
-        float xrot = Input.GetAxisRaw("Mouse X");
-        MouseX += xrot * sensibilidad;
-
-        float yrot = Input.GetAxisRaw("Mouse Y");
-        float campo = yrot * sensibilidad;
-
-        Vector3 mousePosition = Input.mousePosition;
-        MouseX += Input.GetAxis("Mouse X");
-        if (invertedMouse)
+        if (Juego.vivo == true)
         {
-            limitarvicion += campo;
+            float xrot = Input.GetAxisRaw("Mouse X");
+            MouseX += xrot * sensibilidad;
+
+            float yrot = Input.GetAxisRaw("Mouse Y");
+            float campo = yrot * sensibilidad;
+
+            Vector3 mousePosition = Input.mousePosition;
+            MouseX += Input.GetAxis("Mouse X");
+            if (invertedMouse)
+            {
+                limitarvicion += campo;
+            }
+            else
+            {
+                limitarvicion -= campo;
+            }
+            transform.eulerAngles = new Vector3(limitarvicion, MouseX, 0);
         }
-        else
-        {
-            limitarvicion -= campo;
-        }
-        transform.eulerAngles = new Vector3(limitarvicion, MouseX, 0);
     }
 }
 

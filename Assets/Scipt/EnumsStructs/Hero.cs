@@ -6,11 +6,18 @@ using NPC.Ally;
 
 public class Hero : MonoBehaviour
 {
+    float tempDistan;
+    private void Awake()
+    {
+        gameObject.transform.tag = "Herue";
+        
+
+    }
     void Start()
     {
-        gameObject.transform.name = "Granger";
-        gameObject.AddComponent(typeof(Player));
+        Zombi.texto = Zombi.gusto;
 
+        gameObject.AddComponent(typeof(Player));
         GameObject cara = new GameObject();
         cara.AddComponent(typeof(Camera));
         cara.AddComponent(typeof(Ojos));//codigo de camara
@@ -21,13 +28,24 @@ public class Hero : MonoBehaviour
     }
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.transform.tag == "Zombi")
-        {
-            Debug.Log(collision.transform.GetComponent<Zombi>().gusto);
-        }
-        else if (collision.transform.tag == "City")
+        if (collision.transform.tag == "City")
         {
             Debug.Log(collision.transform.GetComponent<Ciudadano>().yoSoy);
         }
+    }
+    public void Update()
+    {
+        GameObject zombiz = null; // GameObject que almacena a todos los Zombis en la esena
+        foreach (Zombi zombi in Transform.FindObjectsOfType<Zombi>()) //Foreach que recorre la esena del juego mirando cuantos Zombis hay
+        {
+            tempDistan = Vector3.Distance(zombi.transform.position, transform.position); // variable para almacenar la distancia de los Zombis al Herue
+            if (tempDistan <= ReguladorNPC.visionRadius)
+                zombiz = zombi.gameObject;
+        }
+        // If que mostrara el mensaje de los Zombis al perseguir si estan en el radio de vicion
+        if (zombiz != null)
+            Juego.mensajeZom = Zombi.gusto;
+        else
+            Juego.mensajeZom = "";
     }
 }

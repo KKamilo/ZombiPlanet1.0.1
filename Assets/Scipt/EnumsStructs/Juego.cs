@@ -7,8 +7,15 @@ using UnityEngine.UI;
 
 public class Juego : MonoBehaviour //Generador
 {
-    public Text textZ;
-    public Text textC;
+    public static int cyti = 0; // variable de contador para mostrar cuantos ciudadanos hay
+    public static int enemy = 0; // variable de contador para mostrar cuantos Zombis hay
+    public Text textZ; // testo UI que es usado como contador de Zombis
+    public Text textC; // testo UI que es usado como contador de Aldeanos
+    public Text mensaje;
+    public static bool vivo = true; // Bool de verificador de vida
+    public static string mensajeZom;
+    public static GameObject perder;
+    public Color colo;
     readonly int cantidad; //variable de Readonly para la creacion de los cubos
     public Juego() // costructor para inicialisar el Readonly 
     {
@@ -16,13 +23,13 @@ public class Juego : MonoBehaviour //Generador
         cantidad = rnd.Next(5, 16);// se le agrega los parametros para la variable creada anterior mente
     }
     public static float hSpied;//variable estatica para la velocidad del herue
-    public void Awake() //usamos el Aweke para inicialisar una bariable Randon.Range para que no salte un problema con la Readonly
+    
+    void Awake()
     {
+
+        perder = GameObject.Find("Image");// imajen que saldra al perder
+        perder.SetActive(false);// se apaga la imajen para que no salga al principio
         hSpied = Random.Range(0.1f, 0.5f);
-    }
-    void Start()
-    {
-        
         int i = 0;
         int k = 0;
         while (i < cantidad)
@@ -36,6 +43,7 @@ public class Juego : MonoBehaviour //Generador
             objec.transform.position = v;
             if (i == 0 && k == 0)
             {
+                objec.GetComponent<Renderer>().material.color = colo;
                 objec.AddComponent(typeof(Hero));
                 k++;
             }
@@ -49,22 +57,28 @@ public class Juego : MonoBehaviour //Generador
                     case 2:
                         objec.AddComponent(typeof(Ciudadano));
                         break;
+                    case 3:
+                        //objec.AddComponent(typeof(Momia));
+                        break;
                 }
             }
             i++;
         }
-
-        int cyti = 0; // variable de contador para mostrar cuantos ciudadanos hay
-        int enemy = 0; // variable de contador para mostrar cuantos Zombis hay
         foreach (Zombi zombi in Transform.FindObjectsOfType<Zombi>()) //Usamos Transform.FindObjectsOfType para buscar el objetoreferente al zombi en la esena
         {
-            enemy = enemy +1;
-            textZ.text = "Zombi: "+enemy; // modifica el texto del cambas y muestra el numero de enemigos
+            enemy = enemy + 1;
         }
         foreach (Ciudadano aldeano in Transform.FindObjectsOfType<Ciudadano>()) //Usamos Transform.FindObjectsOfType para buscar el objetoreferente al ciudadano en la esena
         {
             cyti = cyti + 1;
-            textC.text = "Aldeanos:" + cyti; // modifica el texto del cambas y muestra el numero de aliados
         }
+
+
+    }
+    public void Update ()
+    {
+        textZ.text = "Zombi: " + enemy; // modifica el texto del cambas y muestra el numero de enemigos
+        textC.text = "Aldeanos:" + cyti; // modifica el texto del cambas y muestra el numero de aliados
+        mensaje.text = mensajeZom;
     }
 }
